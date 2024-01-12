@@ -1,0 +1,62 @@
+<!-- home/index.html -->
+{% extends "base/base.html" %}
+
+{% block start %}
+<div class="container mt-5 pt-5">
+    <div class="col-lg-12 col-sm-12">
+        <div class="row">
+            <div class="col-md-6">
+                <form action="{% url 'product_list' %}" method="get" class="search">
+                    <div class="input-group w-100">
+                        <input type="text" class="form-control" name="q" placeholder="Search" value="{{ query }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form> <!-- search-wrap .end// -->
+            </div>
+            <div class="col-md-6">
+
+
+                     <form action="{% url 'product_list' %}" method="get">
+                    <div class="row">
+                        <div class="col-md-8">
+                             <select class="form-control" id="sort-by" name="sort_by">
+                                <option value="default" {% if sort_by == 'default' %}selected{% endif %}>Normal</option>
+                                <option value="price_low_to_high" {% if sort_by == 'price_low_to_high' %}selected{% endif %}>Artan</option>
+                                <option value="price_high_to_low" {% if sort_by == 'price_high_to_low' %}selected{% endif %}>Azalan</option>
+                            </select>
+                        </div>
+                          <div class="col-md-4">
+                            <button type="submit" class="btn btn-secondary">Apply</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+
+    </div> <!-- col.// -->
+
+    <br>
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-3">
+                <figure class="card card-product-grid">
+                    <div class="img-wrap"> <img src="/media/{{ product.product_images.first.image }}"> </div>
+                    <figcaption class="info-wrap border-top">
+                        <a href="{% url 'get_product' product.slug %}" class="title">
+                            <b>{{ product.product_name }}</b>
+                        </a>
+                        <div class="price mt-2">${{ product.price }}.00</div> <!-- price-wrap.// -->
+                    </figcaption>
+                </figure> <!-- card // -->
+            </div> <!-- col.// -->
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

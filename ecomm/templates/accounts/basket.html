@@ -1,0 +1,164 @@
+{% extends "base/base.html" %}
+
+{% block start %}
+<section class="section-content padding-y">
+    <div class="container">
+        <div class="row">
+            <main class="col-md-9">
+                <div class="card">
+                    <table class="table table-borderless table-shopping-cart">
+                        <thead class="text-muted">
+                            <tr class="small text-uppercase">
+                                <th scope="col">Product</th>
+                                <th scope="col" width="120">Quantity</th>
+                                <th scope="col" width="120">Price</th>
+                                <th scope="col" class="text-right" width="200"> </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for basket_detail in basket_detail %}
+                                {% for basket_item in basket_detail.cart_items %}
+                                    <tr>
+                                        <td>
+                                            <figure class="itemside">
+                                                <div class="aside">
+                                                    <img src="{{ basket_item.product.product_images.first.image.url }}" class="img-sm">
+                                                </div>
+                                                <figcaption class="info">
+                                                    <a href="#" class="title text-dark">{{ basket_item.product.product_name }}</a>
+                                                    {% if basket_item.size_variant %}
+                                                        <p class="text-muted small">Size: {{ basket_item.size_variant.size_name }}</p>
+                                                    {% endif %}
+                                                </figcaption>
+                                            </figure>
+                                        </td>
+                                        <td>
+                                            <div class="form-group col-md flex-grow-0">
+                                                <div class="input-group mb-3 input-spinner">
+                                                    <div class="input-group-prepend">
+                                                        <button class="btn btn-light" type="button" onclick="updateTotalQuantity('{{ basket_item.uid }}', -1, {{ basket_item.product.price }})"> − </button>
+                                                    </div>
+                                                    <input id="quantity{{ basket_item.uid }}" type="text" class="form-control" name="quantity" value="{{ basket_item.quantity }}">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-light" type="button" onclick="updateTotalQuantity('{{ basket_item.uid }}', 1, {{ basket_item.product.price }})"> + </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                         <td>
+                                            <div class="price-wrap">
+                                                <var class="price">
+                                                    {{ basket_item.get_total_price|floatformat:2 }}
+                                                </var>
+                                            </div>
+                                        </td>
+                                        <td class="text-right">
+                                            <a href="{% url 'remove_cart' basket_item.uid %}" class="btn btn-light">Remove</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="card-body border-top">
+                        <a href="#" class="btn btn-primary float-md-right">
+                            Make Purchase <i class="fa fa-chevron-right"></i>
+                        </a>
+                        <a href="{% url 'product_list' %}" class="btn btn-light">
+                            <i class="fa fa-chevron-left"></i> Continue shopping
+                        </a>
+                    </div>
+                </div>
+                <div class="alert alert-success mt-3">
+                    <p class="icontext">
+                        <i class="icon text-success fa fa-truck"></i> Free Delivery within 1-2 weeks
+                    </p>
+                </div>
+            </main>
+            <aside class="col-md-3">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <form method="POST" id="coupon-form">
+                            {% include "base/alert.html" %}
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>Have coupon?</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="coupon" placeholder="Coupon code">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary">Apply</button>
+                                    </div>
+                                </div>
+                                <span id="span" class="text-danger"></span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <dl class="dlist-align">
+                            <dt>Total:</dt>
+                            <dd class="text-right h5">
+                                <strong id="total">{{ total_price }}</strong>
+                            </dd>
+                        </dl>
+                        <hr>
+                        <p class="text-center mb-3">
+                            <img src="https://durunet.com.tr/images/banka-logolari.png" height="26">
+                        </p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+<script>
+    function applyCoupon(event) {
+        event.preventDefault();
+        const couponInput = document.getElementsByName("coupon")[0];
+        const couponCode = couponInput.value.trim();
+        const spanElement = document.getElementById("span");
+        const totalElement = document.getElementById("total");
+
+        if (couponCode === "indirim100") {
+            spanElement.innerText = "";
+            couponInput.value = "";
+
+            console.log("Coupon code applied successfully!");
+
+            let currentTotal = parseFloat(totalElement.innerText);
+            const discountAmount = 100;
+
+            if (!isNaN(currentTotal)) {
+                currentTotal -= discountAmount;
+                totalElement.innerText = currentTotal.toFixed(2);
+                console.log("New total:", currentTotal);
+            }
+        } else {
+            console.log("Invalid coupon code.");
+            spanElement.innerText = "Geçersiz Kupon Kodu!";
+        }
+    }
+
+    function updateTotalQuantity(uid, quantity, price) {
+        const quantityElement = document.getElementById("quantity" + uid);
+        const totalElement = document.getElementById("total");
+
+        const currentQuantity = parseInt(quantityElement.value);
+        const newQuantity = currentQuantity + quantity;
+
+        if (newQuantity >= 1) {
+            // Miktar 1'den büyük veya eşitse güncelle
+            quantityElement.value = newQuantity;
+
+            // Toplam fiyatı güncelle
+            const currentTotal = parseFloat(totalElement.innerText);
+            const newTotal = currentTotal + (quantity * price);
+            totalElement.innerText = newTotal.toFixed(2);
+        }
+    }
+
+    document.getElementById("coupon-form").addEventListener("submit", applyCoupon);
+</script>
+{% endblock %}
